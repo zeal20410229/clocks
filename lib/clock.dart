@@ -24,7 +24,7 @@ class _ClockState extends State<Clock> {
 
   void _onTimer(Timer timer) {
     var now = DateTime.now();
-    var formatter = DateFormat('HH:mm:ss');
+    var formatter = DateFormat('yyyy-MM-dd \n     HH:mm');
     var formattedTime = formatter.format(now);
     setState(() => _time = formattedTime);
   }

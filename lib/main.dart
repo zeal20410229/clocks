@@ -10,7 +10,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'タイマー',
+      title: 'Flutter 仮眠タイマー',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -104,41 +104,53 @@ class TimerScreen extends StatefulWidget {
 }
 
 class _TimerScreenState extends State<TimerScreen> {
-  int _secondsRemaining = 180;
+  TextEditingController _minutesController = TextEditingController();
+  TextEditingController _secondsController = TextEditingController();
+  int _secondsRemaining = 0;
   Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    startTimer();
-  }
+  bool _isTimerRunning = false;
 
   @override
   void dispose() {
+    _minutesController.dispose();
+    _secondsController.dispose();
     _timer?.cancel();
     super.dispose();
   }
 
   void startTimer() {
-    const oneSec = const Duration(seconds: 1);
+    if (_isTimerRunning) return;
+
+    int minutes = int.parse(_minutesController.text);
+    int seconds = int.parse(_secondsController.text);
+    _secondsRemaining = (minutes * 60) + seconds;
+
     _timer = Timer.periodic(
-      oneSec,
+      Duration(seconds: 1),
       (Timer timer) {
         setState(() {
           if (_secondsRemaining < 1) {
             timer.cancel();
+            _isTimerRunning = false;
           } else {
             _secondsRemaining--;
           }
         });
       },
     );
+
+    _isTimerRunning = true;
   }
 
   String getTimerText() {
     int minutes = _secondsRemaining ~/ 60;
     int seconds = _secondsRemaining % 60;
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  void pauseTimer() {
+    _timer?.cancel();
+    _isTimerRunning = false;
   }
 
   @override
@@ -148,9 +160,52 @@ class _TimerScreenState extends State<TimerScreen> {
         title: Text('タイマー画面'),
       ),
       body: Center(
-        child: Text(
-          getTimerText(),
-          style: TextStyle(fontSize: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('分: '),
+                SizedBox(
+                  width: 80,
+                  child: TextField(
+                    controller: _minutesController,
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('秒: '),
+                SizedBox(
+                  width: 80,
+                  child: TextField(
+                    controller: _secondsController,
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              child: Text(_isTimerRunning ? '一時停止' : '開始'),
+              onPressed: () {
+                if (_isTimerRunning) {
+                  pauseTimer();
+                } else {
+                  startTimer();
+                }
+              },
+            ),
+            SizedBox(height: 20),
+            Text(
+              getTimerText(),
+              style: TextStyle(fontSize: 32),
+            ),
+          ],
         ),
       ),
     );

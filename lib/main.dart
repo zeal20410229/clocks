@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
+import 'package:audioplayers/audioplayers.dart';
 
 void main() {
   runApp(MyApp());
@@ -27,7 +28,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('ホーム画面'),
+        title: Text('時間確認'),
       ),
       body: Center(
         child: Column(
@@ -110,11 +111,15 @@ class _TimerScreenState extends State<TimerScreen> {
   Timer? _timer;
   bool _isTimerRunning = false;
 
+  bool _isMusicPlaying = false;
+  AudioPlayer _audioPlayer = AudioPlayer();
+
   @override
   void dispose() {
     _minutesController.dispose();
     _secondsController.dispose();
     _timer?.cancel();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -132,6 +137,7 @@ class _TimerScreenState extends State<TimerScreen> {
           if (_secondsRemaining < 1) {
             timer.cancel();
             _isTimerRunning = false;
+            _playMusic();
           } else {
             _secondsRemaining--;
           }
@@ -151,6 +157,21 @@ class _TimerScreenState extends State<TimerScreen> {
   void pauseTimer() {
     _timer?.cancel();
     _isTimerRunning = false;
+    _stopMusic();
+  }
+
+  void _playMusic() async {
+    await _audioPlayer.play('assets/sound.mp3', isLocal: true);
+    setState(() {
+      _isMusicPlaying = true;
+    });
+  }
+
+  void _stopMusic() async {
+    await _audioPlayer.stop();
+    setState(() {
+      _isMusicPlaying = false;
+    });
   }
 
   @override
@@ -204,6 +225,17 @@ class _TimerScreenState extends State<TimerScreen> {
             Text(
               getTimerText(),
               style: TextStyle(fontSize: 32),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              child: Text(_isMusicPlaying ? '音楽停止' : '音楽再生'),
+              onPressed: () {
+                if (_isMusicPlaying) {
+                  _stopMusic();
+                } else {
+                  _playMusic();
+                }
+              },
             ),
           ],
         ),
